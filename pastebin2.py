@@ -54,14 +54,10 @@ class scraper(object):
           pastie = False
           while(pastie is False or pastie is None):
             if("http://pastebin.com/raw.php?i="+url in self._alreadyVisitedPasties):
-              print("\033[93mSkipping pastie...\033[0m")
+              print("\033[93mSkipping pastie. It\'s already downloaded.\033[0m")
               break
             pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
-
-          if("http://pastebin.com/raw.php?i="+url not in self._alreadyVisitedPasties):    
             self._saveToFile(pastie, url, doArchive)
-          else:
-            print "Skipping. File is already downloaded."
         
         self._sleep(sleepTimer)
       except(KeyboardInterrupt,EOFError):
@@ -122,7 +118,20 @@ class scraper(object):
     if(urls is False):
       return
     else:
+      print urls
       return urls
+
+  def _filterPasties(self, pastie, filters=['minecraft']):
+    
+    " Remove pasties with certain strings like \'minecraft\' "
+    
+    pattern = re.compile(r'\b(?:%s)\b' % '|'.join(filters), re.IGNORECASE)
+    match = pattern.search(pastie)
+    if match:
+      pastie = "Filtered pastie found: \'%s\'. Deleting data." % match.group()
+    
+    return pastie
+
 
   def _saveToFile(self, data, name, doArchive=False):
 
@@ -133,7 +142,8 @@ class scraper(object):
     timeString = time.strftime("%d-%m-%Y", time.localtime())
     filename = doArchive and "%s.txt.gz" % name  or "%s.txt" % name
     directory = "Data/Results/%s/" % timeString
-
+    
+    data = self._filterPasties(data)
     # make sure we don't add duplicates to the visited list
     if("http://pastebin.com/raw.php?i="+name not in self._alreadyVisitedPasties and not os.path.isfile(directory + filename)):
       self._alreadyVisitedPasties.append("http://pastebin.com/raw.php?i="+name)
@@ -143,7 +153,7 @@ class scraper(object):
       os.makedirs(directory)
     
     opener =  doArchive and gzip.open or open
-    print "Saving data to file %s" % directory + filename
+    print ("Saving data to file %s" % directory + filename)
     with opener(directory + filename, "w") as fs:
       fs.write(data)
     
