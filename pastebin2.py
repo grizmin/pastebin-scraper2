@@ -51,7 +51,7 @@ class scraper(object):
           url = url.replace("<a href=","").replace('"',"")
           url = url[1:]
           print("\n\033[92mEstablishing connection to pastebin.com/"+url+"\033[0m")
-          pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
+          pastie = False
           while(pastie is False or pastie is None):
             if("http://pastebin.com/raw.php?i="+url in self._alreadyVisitedPasties):
               print("\033[93mSkipping pastie...\033[0m")
