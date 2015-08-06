@@ -207,7 +207,7 @@ class scraper(object):
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser()
-  parser.add_argument("-s","--sleep",type=int,help="Seconds to sleep between scraping",required=False,default=10)
+  parser.add_argument("-s","--sleep",type=int,help="Seconds to sleep between scraping",required=False,default=30)
   parser.add_argument("--gzip","-gz",help="Saves compressed files",required=False,default=False,action="store_true")
   args = parser.parse_args()
 
