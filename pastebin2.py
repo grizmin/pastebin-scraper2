@@ -44,6 +44,7 @@ class scraper(object):
         myParser = urlparser.pastebinParser()
         myParser.parse(source)
         loop = False
+        print myParser.getPasties()
         # obtain the urls from the filtered source and make requests to the urls
         for url,title in myParser.getPasties():
           if("http://pastebin.com/raw.php?i="+url in self._alreadyVisitedPasties):
@@ -55,6 +56,8 @@ class scraper(object):
           pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
             
           if pastie is None:
+            print ("DEBUG: URL:  %s, TITLE:" %s(url, title))
+            print source
             raise NameError("Pastie is empty!")
 
           self._saveToFile(pastie, url, doArchive)
@@ -89,7 +92,7 @@ class scraper(object):
       source = urllib2.unquote(request.read())
       
       # some proxies redirect to a login page or similar, with a simple check we can bypass this problem
-      if(url is "http://pastebin.com" and "#1 paste tool since 2002" not in source):
+      if(url is "http://pastebin.com/archive"  and "#1 paste tool since 2002" not in source):
         raise socket.error
       
       return source
@@ -205,7 +208,7 @@ if __name__ == '__main__':
 
   parser = argparse.ArgumentParser()
   parser.add_argument("-s","--sleep",type=int,help="Seconds to sleep between scraping",required=False,default=10)
-  parser.add_argument("--gzip","-gzip",help="Saves compressed files",required=False,default=False,action="store_true")
+  parser.add_argument("--gzip","-gz",help="Saves compressed files",required=False,default=False,action="store_true")
   args = parser.parse_args()
 
   if(args.sleep < 0):

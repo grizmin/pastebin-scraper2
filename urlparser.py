@@ -35,6 +35,7 @@ class pastebinParser(SGMLParser):
 
   def handle_data(self, data):
     if self.intd and self.ina:
+      data = str(data)
       self.pastie += (data,)
 
   def print_pasties(self):
