@@ -1,4 +1,5 @@
 from  sgmllib import SGMLParser
+import base64
 
 class pastebinParser(SGMLParser):
   
@@ -35,7 +36,7 @@ class pastebinParser(SGMLParser):
 
   def handle_data(self, data):
     if self.intd and self.ina:
-      data = str(data)
+      data = base64.urlsafe_b64encode(data)
       self.pastie += (data,)
 
   def print_pasties(self):

@@ -1,4 +1,4 @@
-import sys, os, re, random, time, urllib2, socket, httplib, argparse, gzip, urlparser
+import sys, os, re, random, time, urllib2, socket, httplib, argparse, gzip, urlparser, base64
 
 class scraper(object):
 
@@ -44,9 +44,10 @@ class scraper(object):
         myParser = urlparser.pastebinParser()
         myParser.parse(source)
         loop = False
-        print myParser.getPasties()
+        
         # obtain the urls from the filtered source and make requests to the urls
         for url,title in myParser.getPasties():
+          title = base64.decodestring(title)
           if("http://pastebin.com/raw.php?i="+url in self._alreadyVisitedPasties):
             if not loop: sys.stdout.write("\033[93mSkipping pastie. It\'s already downloaded: \033[0m")
             loop = True
@@ -56,9 +57,7 @@ class scraper(object):
           pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
             
           if pastie is None:
-            print ("DEBUG: URL:  %s, TITLE:" %s(url, title))
-            print source
-            raise NameError("Pastie is empty!")
+            pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
 
           self._saveToFile(pastie, url, doArchive)
         
@@ -95,6 +94,9 @@ class scraper(object):
       if(url is "http://pastebin.com/archive"  and "#1 paste tool since 2002" not in source):
         raise socket.error
       
+      if source is None:
+        print "FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCK"
+        return
       return source
 
     except(urllib2.HTTPError, urllib2.URLError):
