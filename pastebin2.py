@@ -1,4 +1,4 @@
-import sys, os, re, random, time, urllib2, socket, httplib, argparse, gzip
+import sys, os, re, random, time, urllib2, socket, httplib, argparse, gzip, urlparser
 
 class scraper(object):
 
@@ -35,33 +35,33 @@ class scraper(object):
 
     while 1:
       try:
-        print("\n\033[92mEstablishing connection to pastebin\033[0m")
-
         # obtain the source of pastebin and filter it 
         source = self._getSource("http://pastebin.com/archive")
         while(source is False or source is None):
           source = self._getSource("http://pastebin.com/archive")
+        
 
-        pasteUrls = self._filter(source)
-        while(pasteUrls is False or pasteUrls is None):
-          pasteUrls = self._filter(source)
-
+        myParser = urlparser.pastebinParser()
+        myParser.parse(source)
+        loop = False
         # obtain the urls from the filtered source and make requests to the urls
-        for url in pasteUrls:
-          url = url.replace("<a href=","").replace('"',"")
-          url = url[1:]
-          print("\n\033[92mEstablishing connection to pastebin.com/"+url+"\033[0m")
-          pastie = False
-          while(pastie is False or pastie is None):
-            if("http://pastebin.com/raw.php?i="+url in self._alreadyVisitedPasties):
-              print("\033[93mSkipping pastie. It\'s already downloaded.\033[0m")
-              break
-            pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
-            self._saveToFile(pastie, url, doArchive)
+        for url,title in myParser.getPasties():
+          if("http://pastebin.com/raw.php?i="+url in self._alreadyVisitedPasties):
+            if not loop: sys.stdout.write("\033[93mSkipping pastie. It\'s already downloaded: \033[0m")
+            loop = True
+            if loop: sys.stdout.write("%s " % url)
+            continue
+          print("\nGetting %s  Title: %s" % (url,title))  
+          pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
+            
+          if pastie is None:
+            raise NameError("Pastie is empty!")
+
+          self._saveToFile(pastie, url, doArchive)
         
         self._sleep(sleepTimer)
-      except(KeyboardInterrupt,EOFError):
-        sys.exit()
+      except(NameError,KeyboardInterrupt,EOFError) as e:
+        sys.exit(e)
     
     return
 
@@ -87,11 +87,11 @@ class scraper(object):
         print("Status code "+request.code+"recieved!")
         return
       source = urllib2.unquote(request.read())
-
+      
       # some proxies redirect to a login page or similar, with a simple check we can bypass this problem
-      if(url is "http://pastebin.com" and "<title>Pastebin.com - #1 paste tool since 2002!</title>" not in source):
+      if(url is "http://pastebin.com" and "#1 paste tool since 2002" not in source):
         raise socket.error
-
+      
       return source
 
     except(urllib2.HTTPError, urllib2.URLError):
@@ -100,31 +100,10 @@ class scraper(object):
     except(socket.timeout,socket.error,httplib.BadStatusLine):
       self._removeDeadProxy(self._curProxy)
 
-    return
-
-  def _filter(self, source):
-    """
-    Filters out the urls of the menu on the website of the latest postet pasties and returns them
-    """
-    # filter out the menu on which new pasties get updated
-    data = re.search("<ul\sclass=\"right_menu\">.+>", source)
-
-    if(data is False or data is None):
-      return
-
-    # filter out the urls
-    urls = re.findall("<a href=\".+?\"", data.group())
-
-    if(urls is False):
-      return
-    else:
-      print urls
-      return urls
-
   def _filterPasties(self, pastie, filters=['minecraft']):
     
     " Remove pasties with certain strings like \'minecraft\' "
-    
+
     pattern = re.compile(r'\b(?:%s)\b' % '|'.join(filters), re.IGNORECASE)
     match = pattern.search(pastie)
     if match:
@@ -144,6 +123,7 @@ class scraper(object):
     directory = "Data/Results/%s/" % timeString
     
     data = self._filterPasties(data)
+
     # make sure we don't add duplicates to the visited list
     if("http://pastebin.com/raw.php?i="+name not in self._alreadyVisitedPasties and not os.path.isfile(directory + filename)):
       self._alreadyVisitedPasties.append("http://pastebin.com/raw.php?i="+name)
