@@ -59,7 +59,7 @@ class scraper(object):
             pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
 
           if("http://pastebin.com/raw.php?i="+url not in self._alreadyVisitedPasties):    
-            self._saveToFile(pastie, url, doarchive)
+            self._saveToFile(pastie, url, doArchive)
           else:
             print "Skipping. File is already downloaded."
         
@@ -124,27 +124,29 @@ class scraper(object):
     else:
       return urls
 
-  def _saveToFile(self, data, name, doarchive=False):
+  def _saveToFile(self, data, name, doArchive=False):
+
     """
     Saves extracted data to file with a passed name
     """
+    
+    timeString = time.strftime("%d-%m-%Y", time.localtime())
+    filename = doArchive and "%s.txt.gz" % name  or "%s.txt" % name
+    directory = "Data/Results/%s/" % timeString
 
     # make sure we don't add duplicates to the visited list
-    if("http://pastebin.com/raw.php?i="+name not in self._alreadyVisitedPasties and not os.path.isfile("Data/Results/"+name+".txt") and not os.path.isfile("Data/Results/"+name+".txt.gz")):
+    if("http://pastebin.com/raw.php?i="+name not in self._alreadyVisitedPasties and not os.path.isfile(directory + filename)):
       self._alreadyVisitedPasties.append("http://pastebin.com/raw.php?i="+name)
-
+    
     # create the directory we want to save our data in
-    if(os.path.isdir("Data/Results") is False):
-      os.makedirs("Data/Results")
-
-    if doarchive:
-      print("Saving data to file with name: "+name+".txt.gz")
-      with gzip.open("Data/Results/" + name + ".txt.gz","w") as f:
-        f.write(data)
-    else:
-      print("Saving data to file with name: "+name+".txt")
-      with open("Data/Results/" + name + ".txt","w") as f:
-        f.write(data)
+    if(os.path.isdir(directory) is False):
+      os.makedirs(directory)
+    
+    opener =  doArchive and gzip.open or open
+    print "Saving data to file %s" % directory + filename
+    with opener(directory + filename, "w") as fs:
+      fs.write(data)
+    
     return
 
   def _randomAgent(self):
@@ -220,7 +222,7 @@ if __name__ == '__main__':
     print("Adjusting sleep timer to 1 second")
     args.sleep = 1
   
-  doarchive = args.gzip
+  doArchive = args.gzip
   
   s = scraper()
   s.run(args.sleep)
