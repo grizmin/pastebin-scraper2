@@ -43,21 +43,23 @@ class scraper(object):
 
         myParser = urlparser.pastebinParser()
         myParser.parse(source)
-        loop = False
+        helper = False
         
         # obtain the urls from the filtered source and make requests to the urls
         for url,title in myParser.getPasties():
-          title = base64.decodestring(title)
+          #title = base64.decodestring(title)
           if("http://pastebin.com/raw.php?i="+url in self._alreadyVisitedPasties):
-            if not loop: sys.stdout.write("\033[93mSkipping pastie. It\'s already downloaded: \033[0m")
-            loop = True
-            if loop: sys.stdout.write("%s " % url)
+            if not helper: sys.stdout.write("\n\033[93mAlready downloaded pasties: \033[0m")
+            helper = True
+            if helper: sys.stdout.write("%s " % url)
             continue
-          print("\nGetting %s  Title: %s" % (url,title))  
+          print("\nGetting pastie: %s  Title: %s" % (url,title))  
           pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
-            
-          if pastie is None:
+          
+          counter = 0
+          while pastie is None and counter < 5:
             pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
+            counter += 1
 
           self._saveToFile(pastie, url, doArchive)
         
@@ -93,10 +95,7 @@ class scraper(object):
       # some proxies redirect to a login page or similar, with a simple check we can bypass this problem
       if(url is "http://pastebin.com/archive"  and "#1 paste tool since 2002" not in source):
         raise socket.error
-      
-      if source is None:
-        print "FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCK"
-        return
+        
       return source
 
     except(urllib2.HTTPError, urllib2.URLError):

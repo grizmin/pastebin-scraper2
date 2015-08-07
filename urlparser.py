@@ -1,5 +1,5 @@
 from  sgmllib import SGMLParser
-import base64
+import base64, re
 
 class pastebinParser(SGMLParser):
   
@@ -14,12 +14,12 @@ class pastebinParser(SGMLParser):
     self.pasties = []
     self.intd = False
     self.ina = False
-  
+
   def start_a(self,attributes):
     if self.intd:
       for key, value in attributes:
         if "archive" not in value:
-          self.ina = True  
+          self.ina = True
           self.pastie = self.pastie + (value.strip("/"),)
 
   def start_td(self, attributes):
@@ -30,19 +30,27 @@ class pastebinParser(SGMLParser):
   
   def end_a(self):
     self.ina = False
+    self.title = ''
     if self.pastie:
       self.pasties.append(self.pastie)
     self.pastie = ()
 
   def handle_data(self, data):
     if self.intd and self.ina:
-      data = base64.urlsafe_b64encode(data)
+      data = self.sanitarize(data)
       self.pastie += (data,)
-
+      self.ina = False
+      
   def print_pasties(self):
     for k,v in self.pasties:
       print "url: %s Title: %s" % (k,v)
 
   def getPasties(self):
     return self.pasties
-
+    self.indata = True
+  def sanitarize(self, data):
+     p = re.compile('(\'|\"|`|>|<|\%)', re.VERBOSE)
+     match = p.search(data)
+     if match:
+       data = ''
+     return data
