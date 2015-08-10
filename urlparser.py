@@ -14,6 +14,7 @@ class pastebinParser(SGMLParser):
     self.pasties = []
     self.intd = False
     self.ina = False
+    self.title = ''
 
   def start_a(self,attributes):
     if self.intd:
@@ -30,15 +31,16 @@ class pastebinParser(SGMLParser):
   
   def end_a(self):
     self.ina = False
-    self.title = ''
     if self.pastie:
       self.pasties.append(self.pastie)
     self.pastie = ()
+    self.title = ''
 
   def handle_data(self, data):
     if self.intd and self.ina:
       data = self.sanitarize(data)
-      self.pastie += (data,)
+      self.title += str(data)
+      self.pastie += (self.title,)
       self.ina = False
       
   def print_pasties(self):
@@ -48,6 +50,7 @@ class pastebinParser(SGMLParser):
   def getPasties(self):
     return self.pasties
     self.indata = True
+
   def sanitarize(self, data):
      p = re.compile('(\'|\"|`|>|<|\%)', re.VERBOSE)
      match = p.search(data)

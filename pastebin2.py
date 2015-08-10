@@ -56,10 +56,8 @@ class scraper(object):
           print("\nGetting pastie: %s  Title: %s" % (url,title))  
           pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
           
-          counter = 0
-          while pastie is None and counter < 5:
+          while (pastie is None or pastie is False):
             pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
-            counter += 1
 
           self._saveToFile(pastie, url, doArchive)
         
@@ -94,8 +92,17 @@ class scraper(object):
       
       # some proxies redirect to a login page or similar, with a simple check we can bypass this problem
       if(url is "http://pastebin.com/archive"  and "#1 paste tool since 2002" not in source):
+        print ("Something seems wring with the Proxy!\n \
+            url is \"http://pastebin.com/archive\"  and \"#1 paste tool since 2002\" not in source")
         raise socket.error
-        
+      
+      while (source is False or source is None):
+        if not self._net_connectivity():
+          print ("There is no connectivity to http://pastebin.com")
+          self._sleep(sleepTimer)
+        else:
+          raise socket.error
+      
       return source
 
     except(urllib2.HTTPError, urllib2.URLError):
@@ -104,8 +111,17 @@ class scraper(object):
     except(socket.timeout,socket.error,httplib.BadStatusLine):
       self._removeDeadProxy(self._curProxy)
 
+  def _net_connectivity(self):
+    conn = httplib.HTTPConnection("pastebin.com")
+    try:
+      conn.request("HEAD", "/")
+      return True
+    except:
+      return False
+
+
   def _filterPasties(self, pastie, filters=['minecraft']):
-    
+   
     " Remove pasties with certain strings like \'minecraft\' "
 
     pattern = re.compile(r'\b(?:%s)\b' % '|'.join(filters), re.IGNORECASE)
@@ -114,7 +130,6 @@ class scraper(object):
       pastie = "Filtered pastie found: \'%s\'. Deleting data." % match.group()
     
     return pastie
-
 
   def _saveToFile(self, data, name, doArchive=False):
 
@@ -138,8 +153,9 @@ class scraper(object):
     
     opener =  doArchive and gzip.open or open
     print ("Saving data to file %s" % directory + filename)
-    with opener(directory + filename, "w") as fs:
-      fs.write(data)
+    if not os.path.isfile(directory + filename):
+      with opener(directory + filename, "w") as fs:
+        fs.write(data)
     
     return
 
@@ -209,7 +225,7 @@ if __name__ == '__main__':
 
   parser = argparse.ArgumentParser()
   parser.add_argument("-s","--sleep",type=int,help="Seconds to sleep between scraping",required=False,default=30)
-  parser.add_argument("--gzip","-gz",help="Saves compressed files",required=False,default=False,action="store_true")
+  parser.add_argument("--gzip","--gz",help="Saves compressed files",required=False,default=False,action="store_true")
   args = parser.parse_args()
 
   if(args.sleep < 0):
