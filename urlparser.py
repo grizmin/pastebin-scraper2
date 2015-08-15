@@ -11,7 +11,7 @@ import base64, re
 class pastebinParser(SGMLParser):
   
   pastie = ()
-  _debug = True
+  _debug = False
   _sanitarize = False
   def parse(self, s):
     self.feed(s)
