@@ -28,7 +28,7 @@ class scraper(object):
 
     self._alreadyVisitedPasties = []
 
-  def run(self,sleepTimer = 10):
+  def run(self, sleepTimer = 30, _doArchive = False):
     """
     Starts the process of scraping pastebin for pasties, sleeping for a passed amount of time
     """
@@ -36,9 +36,9 @@ class scraper(object):
     while 1:
       try:
         # obtain the source of pastebin and filter it 
-        source = self._getSource("http://pastebin.com/archive")
+        source = self._getSource("http://pastebin.com/archive", sleepTimer)
         while(source is False or source is None):
-          source = self._getSource("http://pastebin.com/archive")
+          source = self._getSource("http://pastebin.com/archive", sleepTimer)
         
 
         myParser = urlparser.pastebinParser()
@@ -54,15 +54,15 @@ class scraper(object):
             if helper: sys.stdout.write("%s " % url)
             continue
           print("\nGetting pastie: %s  Title: %s" % (url,title))  
-          pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
+          pastie = self._getSource("http://pastebin.com/raw.php?i="+url, sleepTimer)
           
           while (pastie is None or pastie is False):
-            pastie = self._getSource("http://pastebin.com/raw.php?i="+url)
+            pastie = self._getSource("http://pastebin.com/raw.php?i="+url, sleepTimer)
 
-          self._saveToFile(pastie, url, doArchive)
+          self._saveToFile(pastie, url, _doArchive)
         
         self._sleep(sleepTimer)
-      except(NameError,KeyboardInterrupt,EOFError) as e:
+      except(NameError,KeyboardInterrupt,EOFError,ValueError) as e:
         sys.exit(e)
     
     return
@@ -72,7 +72,7 @@ class scraper(object):
     time.sleep(seconds)
     return
 
-  def _getSource(self, url):
+  def _getSource(self, url, sleepTimer = 30):
     """
     Establishes a connection to the URL
     """
@@ -90,20 +90,27 @@ class scraper(object):
         return
       source = urllib2.unquote(request.read())
       
-      # some proxies redirect to a login page or similar, with a simple check we can bypass this problem
-      if(url is "http://pastebin.com/archive"  and "#1 paste tool since 2002" not in source):
-        print ("Something seems wring with the Proxy!\n \
-            url is \"http://pastebin.com/archive\"  and \"#1 paste tool since 2002\" not in source")
-        raise socket.error
-      
       while (source is False or source is None):
+        print("Source is none, somethin is wrong")
         if not self._net_connectivity():
           print ("There is no connectivity to http://pastebin.com")
           self._sleep(sleepTimer)
         else:
           raise socket.error
       
+      # some proxies redirect to a login page or similar, with a simple check we can bypass this problem
+      if("http://pastebin.com/archive" in url  and "#1 paste tool since 2002" not in source):
+        print ("Something seems wring with the Proxy!\n \
+            url is \"http://pastebin.com/archive\"  and \"#1 paste tool since 2002\" not in source")
+        raise socket.error
+      
       return source
+    except(urllib2.URLError):
+      if not self._net_connectivity():
+        print ("There is no connectivity to http://pastebin.com")
+        self._sleep(sleepTimer)
+      else:
+        self._removeDeadProxy(self._curProxy)
 
     except(urllib2.HTTPError, urllib2.URLError):
       self._removeDeadProxy(self._curProxy)
@@ -131,14 +138,14 @@ class scraper(object):
     
     return pastie
 
-  def _saveToFile(self, data, name, doArchive=False):
+  def _saveToFile(self, data, name, _doArchive=False):
 
     """
     Saves extracted data to file with a passed name
     """
     
     timeString = time.strftime("%d-%m-%Y", time.localtime())
-    filename = doArchive and "%s.txt.gz" % name  or "%s.txt" % name
+    filename = _doArchive and "%s.txt.gz" % name  or "%s.txt" % name
     directory = "Data/Results/%s/" % timeString
     
     data = self._filterPasties(data)
@@ -151,7 +158,7 @@ class scraper(object):
     if(os.path.isdir(directory) is False):
       os.makedirs(directory)
     
-    opener =  doArchive and gzip.open or open
+    opener =  _doArchive and gzip.open or open
     print ("Saving data to file %s" % directory + filename)
     if not os.path.isfile(directory + filename):
       with opener(directory + filename, "w") as fs:
@@ -231,8 +238,6 @@ if __name__ == '__main__':
   if(args.sleep < 0):
     print("Adjusting sleep timer to 1 second")
     args.sleep = 1
-  
-  doArchive = args.gzip
-  
+
   s = scraper()
-  s.run(args.sleep)
+  s.run(args.sleep,args.gzip)
