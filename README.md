@@ -1,11 +1,10 @@
-# pastebin-scrapper2
+# pastebin-scraper2
 usage: pastebin2.py [-h] [-s SLEEP] [--gzip]
 
 optional arguments:
-  -h, --help            show this help message and exit
-  -s SLEEP, --sleep SLEEP
-                        Seconds to sleep between scraping
-  --gzip, --gz          Saves compressed files
+  -h, --help                  show this help message and exit
+  -s SLEEP, --sleep SLEEP     Seconds to sleep between scraping
+  --gzip, --gz                Saves compressed files
 
 -----------------------------------------------------------------------------
 The inital source was written by someone else, but I cant remember who it was
