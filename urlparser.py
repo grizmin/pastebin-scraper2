@@ -58,7 +58,7 @@ class pastebinParser(SGMLParser):
   def handle_data(self, data):
     if self.intr and self.intd and self.ina:
       if self._sanitarize: data = self.sanitarize(data)
-      if self._debug: print "DEBUG: %s,%s" % (self.pastie,data)
+      if self._debug: print("DEBUG: %s,%s" % (self.pastie,data))
       if self.indata:
         self.title.append(data)
         self.indata = False
@@ -67,10 +67,10 @@ class pastebinParser(SGMLParser):
 
   def print_pasties(self):
     for k,v in self.pasties:
-      print "url: %s Title: %s" % (k,v)
+      print("url: %s Title: %s" % (k,v))
 
   def getPasties(self):
-    if self._debug: print self.pasties
+    if self._debug: print(self.pasties)
     return self.pasties
 
   def sanitarize(self, data):

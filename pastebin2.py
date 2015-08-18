@@ -1,10 +1,9 @@
-import sys, os, re, random, time, urllib2, socket, httplib, argparse, gzip, urlparser, base64
+#!/usr/bin/env python
+import sys, os, re, httplib, random, time, socket, argparse, gzip, urlparser, base64, urllib2
 
 class scraper(object):
 
   def __init__(self):
-    # Load resources
-
     # User Agents
     try:
       with open("Data/User-Agents.txt","r") as f:

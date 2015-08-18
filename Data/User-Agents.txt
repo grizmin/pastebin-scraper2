@@ -1,6 +1,3 @@
-# Copyright (c) 2006-2014 sqlmap developers (http://sqlmap.org/)
-# See the file 'doc/COPYING' for copying permission
-
 Mozilla/4.0 (Mozilla/4.0; MSIE 7.0; Windows NT 5.1; FDM; SV1)
 Mozilla/4.0 (Mozilla/4.0; MSIE 7.0; Windows NT 5.1; FDM; SV1; .NET CLR 3.0.04506.30)
 Mozilla/4.0 (Windows; MSIE 7.0; Windows NT 5.1; SV1; .NET CLR 2.0.50727)
