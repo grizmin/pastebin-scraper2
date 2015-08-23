@@ -11,7 +11,7 @@ The inital source was written by someone else, but I cant remember who it was
 or from where I got it, but there isn't much left from the original source
 anyway.
 
-The scrapper supports proxies and predefined user agents.
+The scraper supports proxies and predefined user agents.
 
 If oyu run out of proxies you can get new ones with the following:
 wget -q -O- http://www.us-proxy.org |awk -F '<tr><td>' {'print $2'} |awk -F
